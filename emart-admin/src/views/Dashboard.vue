@@ -8,7 +8,7 @@
               <el-icon :size="30"><ShoppingCart /></el-icon>
             </div>
             <div class="stat-info">
-              <div class="stat-label">今日订单</div>
+              <div class="stat-label">总订单数</div>
               <div class="stat-value">{{ stats.todayOrders }}</div>
             </div>
           </div>
@@ -22,7 +22,7 @@
               <el-icon :size="30"><Money /></el-icon>
             </div>
             <div class="stat-info">
-              <div class="stat-label">今日销售额</div>
+              <div class="stat-label">总销售额</div>
               <div class="stat-value">¥{{ stats.todaySales }}</div>
             </div>
           </div>

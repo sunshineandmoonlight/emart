@@ -27,7 +27,7 @@
         </el-form-item>
 
         <el-form-item style="text-align: center; border-top: 1px solid #eee; padding-top: 15px;">
-          <a href="http://localhost:5175/login" target="_blank" style="color: #909399; text-decoration: none; font-size: 14px;">
+          <a :href="adminUrl" target="_blank" style="color: #909399; text-decoration: none; font-size: 14px;">
             管理员入口
           </a>
         </el-form-item>
@@ -37,7 +37,7 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { login } from '@/api/user'
@@ -45,6 +45,18 @@ import { login } from '@/api/user'
 const router = useRouter()
 const loginFormRef = ref()
 const loading = ref(false)
+
+// 动态生成管理员入口URL
+const adminUrl = computed(() => {
+  const currentHost = window.location.hostname
+  const adminPort = '5175'
+
+  if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
+    return `http://localhost:${adminPort}/login`
+  } else {
+    return `http://${currentHost}:${adminPort}/login`
+  }
+})
 
 const loginForm = reactive({
   username: '',

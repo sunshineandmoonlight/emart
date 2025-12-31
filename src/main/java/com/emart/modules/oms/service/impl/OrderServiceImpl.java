@@ -306,22 +306,17 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     public SalesStatsDTO getSalesStats() {
         SalesStatsDTO stats = new SalesStatsDTO();
 
-        // 今日订单数和销售额
-        LocalDateTime todayStart = LocalDateTime.of(LocalDate.now(), LocalTime.MIN);
-        LocalDateTime todayEnd = LocalDateTime.of(LocalDate.now(), LocalTime.MAX);
+        // 总订单数和总销售额（统计所有已支付的订单：状态1-待发货，2-已发货，3-已完成）
+        LambdaQueryWrapper<Order> paidOrdersWrapper = new LambdaQueryWrapper<>();
+        paidOrdersWrapper.in(Order::getStatus, 1, 2, 3);
 
-        LambdaQueryWrapper<Order> todayWrapper = new LambdaQueryWrapper<>();
-        todayWrapper.between(Order::getCreateTime,
-            java.sql.Timestamp.valueOf(todayStart),
-            java.sql.Timestamp.valueOf(todayEnd));
+        List<Order> paidOrders = orderMapper.selectList(paidOrdersWrapper);
+        stats.setTodayOrders(paidOrders.size());
 
-        List<Order> todayOrders = orderMapper.selectList(todayWrapper);
-        stats.setTodayOrders(todayOrders.size());
-
-        BigDecimal todaySales = todayOrders.stream()
+        BigDecimal totalSales = paidOrders.stream()
             .map(Order::getTotalAmount)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
-        stats.setTodaySales(todaySales);
+        stats.setTodaySales(totalSales);
 
         // 总商品数
         Long totalProducts = productMapper.selectCount(null);

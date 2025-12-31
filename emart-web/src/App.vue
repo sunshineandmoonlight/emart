@@ -144,8 +144,18 @@ const handleSearch = () => {
 }
 
 const goToAdmin = () => {
-  // 跳转到管理员后台（在5175端口）
-  window.location.href = 'http://localhost:5175'
+  // 跳转到管理员后台
+  // 根据当前环境自动判断管理后台地址
+  const currentHost = window.location.hostname
+  const adminPort = '5175' // 管理后台端口
+
+  if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
+    // 本地开发环境
+    window.location.href = `http://localhost:${adminPort}`
+  } else {
+    // 生产环境 - 使用当前服务器IP + 管理后台端口
+    window.location.href = `http://${currentHost}:${adminPort}`
+  }
 }
 
 const logout = () => {

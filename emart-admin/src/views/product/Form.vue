@@ -23,10 +23,13 @@
         </el-form-item>
 
         <el-form-item label="分类" prop="categoryId">
-          <el-select v-model="form.categoryId" placeholder="请选择分类">
-            <el-option label="图书" :value="1"></el-option>
-            <el-option label="电子产品" :value="2"></el-option>
-            <el-option label="服装" :value="3"></el-option>
+          <el-select v-model="form.categoryId" placeholder="请选择分类" style="width: 100%;">
+            <el-option
+              v-for="category in categories"
+              :key="category.id"
+              :label="category.name"
+              :value="category.id"
+            ></el-option>
           </el-select>
         </el-form-item>
 
@@ -77,7 +80,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { createProduct, updateProduct, getProductDetail } from '@/api/product'
+import { createProduct, updateProduct, getProductDetail, getCategoryList } from '@/api/product'
 
 const router = useRouter()
 const route = useRoute()
@@ -85,6 +88,9 @@ const formRef = ref()
 const loading = ref(false)
 
 const isEdit = computed(() => !!route.params.id)
+
+// 分类列表
+const categories = ref([])
 
 const form = reactive({
   name: '',
@@ -159,6 +165,15 @@ const handleSubmit = () => {
 }
 
 onMounted(async () => {
+  // 加载分类列表
+  try {
+    const res = await getCategoryList()
+    categories.value = res.data || []
+  } catch (error) {
+    console.error('加载分类失败', error)
+  }
+
+  // 如果是编辑模式，加载商品数据
   if (isEdit.value) {
     try {
       const res = await getProductDetail(route.params.id)

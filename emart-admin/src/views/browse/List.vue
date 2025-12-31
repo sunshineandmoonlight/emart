@@ -7,10 +7,23 @@
 
       <el-table :data="tableData" border stripe v-loading="loading">
         <el-table-column prop="id" label="ID" width="80"></el-table-column>
-        <el-table-column prop="userName" label="用户" width="120"></el-table-column>
+        <el-table-column prop="userName" label="用户" width="120">
+          <template #default="{ row }">
+            {{ row.userName || '匿名用户' }}
+          </template>
+        </el-table-column>
         <el-table-column prop="productName" label="商品名称"></el-table-column>
         <el-table-column prop="createTime" label="浏览时间" width="180"></el-table-column>
       </el-table>
+
+      <el-empty v-if="!loading && tableData.length === 0" description="暂无浏览日志">
+        <template #image>
+          <el-icon :size="100" color="#ccc"><Document /></el-icon>
+        </template>
+        <p style="color: #999; margin-top: 10px;">
+          当用户在前端浏览商品详情时，系统会自动记录浏览行为
+        </p>
+      </el-empty>
 
       <el-pagination
         v-model:current-page="pagination.pageNum"
@@ -29,6 +42,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
+import { Document } from '@element-plus/icons-vue'
 import { getBrowseLogs } from '@/api/browse'
 
 const loading = ref(false)
