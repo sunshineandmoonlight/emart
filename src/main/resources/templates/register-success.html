@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册成功</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #409EFF;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        .content {
+            background-color: #f9f9f9;
+            padding: 30px;
+            border-radius: 0 0 5px 5px;
+        }
+        .welcome {
+            font-size: 24px;
+            color: #409EFF;
+            margin-bottom: 20px;
+        }
+        .info {
+            margin: 15px 0;
+            padding: 10px;
+            background-color: white;
+            border-left: 3px solid #409EFF;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 12px;
+            color: #999;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 30px;
+            background-color: #409EFF;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>🎉 欢迎加入E-mart电商平台</h2>
+    </div>
+    <div class="content">
+        <p class="welcome">亲爱的 <strong th:text="${username}">用户</strong>：</p>
+        <p>恭喜您成功注册E-mart账号！</p>
+
+        <div class="info">
+            <p><strong>账号信息：</strong></p>
+            <p>用户名：<span th:text="${username}">-</span></p>
+            <p>注册邮箱：<span th:text="${email}">-</span></p>
+        </div>
+
+        <p>现在您可以：</p>
+        <ul>
+            <li>浏览海量商品</li>
+            <li>添加商品到购物车</li>
+            <li>在线下单购买</li>
+            <li>查看订单状态</li>
+        </ul>
+
+        <div style="text-align: center;">
+            <a href="http://localhost:8081/products" class="button">立即开始购物</a>
+        </div>
+
+        <p>如果您没有注册此账号，请忽略此邮件。</p>
+
+        <div class="footer">
+            <p>此邮件由系统自动发送，请勿直接回复</p>
+            <p>&copy; 2024 E-mart 电商平台. 保留所有权利.</p>
+        </div>
+    </div>
+</body>
+</html>

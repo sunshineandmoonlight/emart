@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.emart.modules.sms.mapper.CouponMapper">
+
+    <select id="findAvailableCoupons" resultType="com.emart.modules.sms.model.Coupon">
+        SELECT * FROM sms_coupon
+        WHERE status = 1
+          AND enable_time &lt;= #{now}
+          AND disable_time &gt;= #{now}
+          AND count &gt; receive_count
+        ORDER BY create_time DESC
+    </select>
+
+</mapper>

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>订单发货通知</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #409EFF;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        .content {
+            background-color: #f9f9f9;
+            padding: 30px;
+            border-radius: 0 0 5px 5px;
+        }
+        .shipping-info {
+            background-color: white;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 3px solid #409EFF;
+        }
+        .notice {
+            background-color: #fff3cd;
+            padding: 15px;
+            margin: 20px 0;
+            border-left: 3px solid #ffc107;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 12px;
+            color: #999;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 15px;
+            background-color: #67C23A;
+            color: white;
+            border-radius: 3px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>🚚 订单已发货</h2>
+    </div>
+    <div class="content">
+        <p>尊敬的 <strong th:text="${username}">客户</strong>：</p>
+        <p>好消息！您的订单已经发货，正在向您配送中。</p>
+
+        <div class="shipping-info">
+            <p><strong>发货信息：</strong></p>
+            <p>订单号：<span th:text="${orderNo}">-</span></p>
+            <p>发货时间：<span th:text="${shipTime}">-</span></p>
+            <p>物流公司：<span th:text="${logisticsCompany}">-</span></p>
+            <p>物流单号：<span th:text="${logisticsNo}">-</span></p>
+        </div>
+
+        <div class="notice">
+            <p><strong>温馨提示：</strong></p>
+            <ul>
+                <li>请保持电话畅通，快递员可能会提前联系您</li>
+                <li>收到包裹时请先验货再签收</li>
+                <li>如长时间未收到货，请联系客服查询</li>
+            </ul>
+        </div>
+
+        <p>感谢您在E-mart购物，祝您生活愉快！</p>
+
+        <div class="footer">
+            <p>此邮件由系统自动发送，请勿直接回复</p>
+            <p>&copy; 2024 E-mart 电商平台. 保留所有权利.</p>
+        </div>
+    </div>
+</body>
+</html>

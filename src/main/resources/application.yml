@@ -1,0 +1,81 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: emart-api
+  profiles:
+    active: dev
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+  # 邮件配置
+  mail:
+    host: smtp.qq.com
+    port: 587
+    username: 2264575523@qq.com
+    password: kvpxjeutcphvecdh
+    protocol: smtp
+    default-encoding: UTF-8
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+  # Thymeleaf配置
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+    cache: false
+    encoding: UTF-8
+    mode: HTML
+
+mybatis-plus:
+  mapper-locations: classpath:/mapper/**/*.xml
+  global-config:
+    db-config:
+      id-type: auto
+  configuration:
+    auto-mapping-behavior: partial
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+jwt:
+  tokenHeader: Authorization
+  secret: emart-secret-key-2024
+  expiration: 604800  # 7天
+  tokenHead: 'Bearer '
+
+redis:
+  key:
+    cart: 'oms:cart'
+    browse: 'cms:browse'
+
+secure:
+  ignored:
+    urls:
+      - /swagger-ui/**
+      - /v3/api-docs/**
+      - /swagger-resources/**
+      - /**/*.html
+      - /**/*.js
+      - /**/*.css
+      - /**/*.png
+      - /**/*.jpg
+      - /favicon.ico
+      - /actuator/**
+      - /user/login
+      - /user/register
+      - /product/**
+      - /category/**
+      - /uploads/**
+
+# 文件上传路径
+file:
+  upload-path: D:/emart/uploads/

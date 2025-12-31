@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./mvnw:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)",
+      "Bash(npm create vite:*)",
+      "Bash(npm install)",
+      "Bash(npm install:*)",
+      "Bash(npm run dev)",
+      "Bash(if not exist \"D:\\test\\project\\emart\\uploads\" mkdir \"D:\\test\\project\\emart\\uploads\")",
+      "Bash(if not exist \"D:\\test\\project\\emart\\images\" mkdir \"D:\\test\\project\\emart\\images\")",
+      "Bash(curl:*)",
+      "Bash(timeout:*)",
+      "Bash(ping:*)",
+      "Bash(nul:*)",
+      "Bash(mysql:*)",
+      "Bash(cat:*)",
+      "Bash(git init:*)",
+      "Bash(if not exist \"docker\\mysql\\init\" mkdir \"docker\\mysql\\init\")",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

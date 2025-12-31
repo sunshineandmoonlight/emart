@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.emart.modules.sms.mapper.CouponHistoryMapper">
+
+    <select id="findByUserId" resultType="com.emart.modules.sms.model.CouponHistory">
+        SELECT * FROM sms_coupon_history
+        WHERE user_id = #{userId}
+        <if test="status != null">
+            AND status = #{status}
+        </if>
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="countByUserIdAndCouponId" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM sms_coupon_history
+        WHERE user_id = #{userId}
+          AND coupon_id = #{couponId}
+    </select>
+
+</mapper>

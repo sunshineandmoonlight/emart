@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.emart.modules.pms.mapper.SkuStockMapper">
+
+    <select id="findByProductId" resultType="com.emart.modules.pms.model.SkuStock">
+        SELECT * FROM pms_sku_stock
+        WHERE product_id = #{productId}
+        ORDER BY id
+    </select>
+
+</mapper>
