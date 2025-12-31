@@ -93,7 +93,7 @@
 ---
 
 ## 🏗️ 系统架构
-https://github.com/sunshineandmoonlight/emart/blob/main/kuangjia.png
+[https://github.com/sunshineandmoonlight/emart/blob/main/kuangjia.png](https://github.com/sunshineandmoonlight/emart/blob/main/kuangjia.png)
 
 
 ### 核心模块划分
