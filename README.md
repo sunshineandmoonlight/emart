@@ -95,7 +95,7 @@
 ## 🏗️ 系统架构
 
 ```
-<img width="865" height="831" alt="image" src="https://github.com/user-attachments/assets/af44a865-b7f0-438b-aefe-f27c033fd995" />
+![Uploading 009ff11a-efe9-4ea1-98e1-4209d5fdc831.png…]()
 
 ```
 
