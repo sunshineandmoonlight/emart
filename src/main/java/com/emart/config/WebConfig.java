@@ -16,9 +16,10 @@ public class WebConfig implements WebMvcConfigurer {
      */
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // Windows系统
-        String uploadsPath = "file:D:/test/project/emart/uploads/";
-        String imagesPath = "file:D:/test/project/emart/images/";
+        // 使用动态路径，获取项目根目录
+        String projectRoot = System.getProperty("user.dir");
+        String uploadsPath = "file:" + projectRoot + java.io.File.separator + "uploads" + java.io.File.separator;
+        String imagesPath = "file:" + projectRoot + java.io.File.separator + "images" + java.io.File.separator;
 
         registry.addResourceHandler("/uploads/**")
                 .addResourceLocations(uploadsPath);

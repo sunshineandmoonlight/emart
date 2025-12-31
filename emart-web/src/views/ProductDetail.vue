@@ -37,26 +37,10 @@
             <h1 class="product-name">{{ product.name }}</h1>
             <p class="product-subtitle">{{ product.subtitle }}</p>
 
-            <!-- SKU选择区域 -->
-            <div class="sku-section" v-if="skuList.length > 0">
-              <div
-                v-for="(sku, index) in skuList"
-                :key="sku.id"
-                class="sku-item"
-                :class="{ active: selectedSku?.id === sku.id }"
-                @click="selectSku(sku)"
-              >
-                <div class="sku-info-text">
-                  <span class="sku-name">{{ getSkuDisplayName(sku) }}</span>
-                  <span class="sku-stock">库存: {{ sku.stock }}</span>
-                </div>
-              </div>
-            </div>
-
             <div class="price-section">
               <div class="price-row">
                 <span class="label">价格</span>
-                <span class="price">¥{{ selectedSku ? selectedSku.price : product.price }}</span>
+                <span class="price">¥{{ product.price }}</span>
               </div>
               <div class="stock-row">
                 <span class="label">库存</span>
@@ -144,80 +128,11 @@
       </div>
     </el-card>
 
-    <!-- 商品评价 -->
-    <el-card class="review-card">
-      <template #header>
-        <div class="review-header">
-          <h3>用户评价</h3>
-          <div class="review-stats">
-            <div class="average-rating">
-              <span class="rating-score">{{ averageRating }}</span>
-              <el-rate
-                v-model="averageRating"
-                disabled
-                show-score
-                text-color="#ff9900"
-                score-template="{value}"
-              />
-            </div>
-            <span class="review-count">{{ reviewCount }} 条评价</span>
-          </div>
-        </div>
-      </template>
 
-      <el-empty v-if="reviews.length === 0" description="暂无评价" />
-
-      <div v-else class="review-list">
-        <div v-for="review in reviews" :key="review.id" class="review-item">
-          <div class="review-header-info">
-            <div class="user-info">
-              <span class="username">{{ review.isAnonymous ? '匿名用户' : `用户${review.userId}` }}</span>
-              <el-rate
-                v-model="review.rating"
-                disabled
-                size="small"
-              />
-            </div>
-            <span class="review-time">{{ review.createTime }}</span>
-          </div>
-
-          <div class="review-sku" v-if="review.skuInfo">
-            <el-tag size="small" type="info">{{ review.skuInfo }}</el-tag>
-          </div>
-
-          <div class="review-content">{{ review.content }}</div>
-
-          <div class="review-images" v-if="review.images">
-            <el-image
-              v-for="(img, index) in review.images.split(',')"
-              :key="index"
-              :src="getImageUrl(img)"
-              :preview-src-list="review.images.split(',').map(i => getImageUrl(i))"
-              fit="cover"
-              class="review-image"
-            />
-          </div>
-        </div>
-      </div>
-
-      <el-pagination
-        v-if="reviewPagination.total > 0"
-        v-model:current-page="reviewPagination.pageNum"
-        v-model:page-size="reviewPagination.pageSize"
-        :total="reviewPagination.total"
-        :page-sizes="[5, 10, 20]"
-        layout="prev, pager, next"
-        small
-        style="margin-top: 20px; justify-content: center"
-        @current-change="fetchReviews"
-        @size-change="fetchReviews"
-      />
-    </el-card>
-
-    <!-- 推荐商品 -->
+    <!-- 同类推荐 -->
     <el-card class="recommend-card">
       <template #header>
-        <h3>🔥 相关推荐</h3>
+        <h3>🔥 同类推荐</h3>
       </template>
       <el-row :gutter="20">
         <el-col :xs="24" :sm="12" :md="6" v-for="item in recommendProducts" :key="item.id">
@@ -241,8 +156,7 @@ import { ElMessage } from 'element-plus'
 import { ShoppingCart, CircleCheck, Star } from '@element-plus/icons-vue'
 import { getProductDetail } from '@/api/product'
 import { addToCart as addToCartApi } from '@/api/cart'
-import { getProductReviews, getAverageRating, getReviewCount } from '@/api/review'
-import { getProductSkus } from '@/api/sku'
+import { getProductList } from '@/api/product'
 import { getImageUrl } from '@/utils/image'
 
 const route = useRoute()
@@ -261,33 +175,11 @@ const mainImageRef = ref(null)
 const magnifierStyle = ref({})
 const magnifierImgStyle = ref({})
 
-// SKU相关
-const skuList = ref([])
-const selectedSku = ref(null)
-
-// 评价相关
-const reviews = ref([])
-const averageRating = ref(0)
-const reviewCount = ref(0)
-const reviewPagination = ref({
-  pageNum: 1,
-  pageSize: 5,
-  total: 0
-})
-
 const productImages = computed(() => {
   if (!product.value) return []
   const images = []
   if (product.value.image) {
     images.push(product.value.image)
-  }
-  // 添加SKU图片
-  if (skuList.value && skuList.value.length > 0) {
-    skuList.value.forEach(sku => {
-      if (sku.image && !images.includes(sku.image)) {
-        images.push(sku.image)
-      }
-    })
   }
   return images
 })
@@ -317,32 +209,9 @@ const handleMouseMove = (e) => {
   }
 }
 
-// 选择SKU
-const selectSku = (sku) => {
-  selectedSku.value = sku
-  // 如果SKU有图片，切换到SKU图片
-  if (sku.image) {
-    currentImage.value = sku.image
-  }
-}
-
 // 获取库存
 const getStock = () => {
-  if (selectedSku.value) {
-    return selectedSku.value.stock
-  }
   return product.value?.stock || 0
-}
-
-// 获取SKU显示名称
-const getSkuDisplayName = (sku) => {
-  try {
-    const spData = JSON.parse(sku.spData)
-    const attributes = Object.values(spData).join(' / ')
-    return attributes || sku.skuCode
-  } catch (e) {
-    return sku.skuCode
-  }
 }
 
 const categoryName = computed(() => {
@@ -363,22 +232,23 @@ const fetchProductDetail = async () => {
     product.value = res.data
     currentImage.value = res.data.image || ''
 
-    // 获取SKU列表
+    // 获取同类推荐商品（同分类的其他商品，排除当前商品）
     try {
-      const skuRes = await getProductSkus(id)
-      skuList.value = skuRes.data || []
-
-      // 如果有SKU，默认选择第一个
-      if (skuList.value.length > 0) {
-        selectedSku.value = skuList.value[0]
+      if (product.value.categoryId) {
+        const recommendRes = await getProductList({
+          categoryId: product.value.categoryId,
+          pageNum: 1,
+          pageSize: 4
+        })
+        // 过滤掉当前商品
+        recommendProducts.value = (recommendRes.data.records || [])
+          .filter(item => item.id !== product.value.id)
+          .slice(0, 4)
       }
-    } catch (skuError) {
-      // 如果SKU接口失败（表不存在等），继续使用商品基础信息
-      console.warn('获取SKU失败，使用商品基础信息', skuError)
+    } catch (recError) {
+      console.warn('获取推荐商品失败', recError)
+      recommendProducts.value = []
     }
-
-    // 获取推荐商品（同分类的其他商品）
-    // TODO: 调用推荐商品API
   } catch (error) {
     ElMessage.error('获取商品详情失败')
     router.push('/products')
@@ -451,48 +321,8 @@ const goToProduct = (id) => {
   }, 100)
 }
 
-const fetchReviewStats = async () => {
-  try {
-    const [avgRes, countRes] = await Promise.all([
-      getAverageRating(route.params.id),
-      getReviewCount(route.params.id)
-    ])
-    averageRating.value = avgRes.data || 0
-    reviewCount.value = countRes.data || 0
-  } catch (error) {
-    // 如果是404错误，说明表不存在，初始化为0
-    if (error.response?.status === 404) {
-      averageRating.value = 0
-      reviewCount.value = 0
-    } else {
-      console.error('获取评价统计失败', error)
-    }
-  }
-}
-
-const fetchReviews = async () => {
-  try {
-    const res = await getProductReviews(route.params.id, {
-      pageNum: reviewPagination.value.pageNum,
-      pageSize: reviewPagination.value.pageSize
-    })
-    reviews.value = res.data.records || []
-    reviewPagination.value.total = res.data.total || 0
-  } catch (error) {
-    // 如果是404错误，说明表不存在，初始化为空数组
-    if (error.response?.status === 404) {
-      reviews.value = []
-      reviewPagination.value.total = 0
-    } else {
-      console.error('获取评价列表失败', error)
-    }
-  }
-}
-
 onMounted(() => {
   fetchProductDetail()
-  fetchReviewStats()
-  fetchReviews()
 })
 </script>
 
@@ -601,52 +431,6 @@ onMounted(() => {
   font-size: 16px;
   color: #666;
   margin: 0 0 20px 0;
-}
-
-/* SKU选择区域 */
-.sku-section {
-  margin: 20px 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.sku-item {
-  padding: 12px 20px;
-  border: 2px solid #ddd;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s;
-  background-color: #fff;
-}
-
-.sku-item:hover {
-  border-color: #ff6b6b;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(255, 107, 107, 0.2);
-}
-
-.sku-item.active {
-  border-color: #ff6b6b;
-  background-color: #fff5f5;
-  font-weight: 500;
-}
-
-.sku-info-text {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  align-items: flex-start;
-}
-
-.sku-name {
-  font-size: 14px;
-  color: #333;
-}
-
-.sku-stock {
-  font-size: 12px;
-  color: #999;
 }
 
 .price-section {
@@ -824,104 +608,6 @@ onMounted(() => {
   font-size: 18px;
   color: #ff6b6b;
   font-weight: bold;
-}
-
-/* 商品评价 */
-.review-card {
-  margin-bottom: 20px;
-}
-
-.review-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.review-header h3 {
-  margin: 0;
-  color: #333;
-}
-
-.review-stats {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.average-rating {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.rating-score {
-  font-size: 28px;
-  font-weight: bold;
-  color: #ff6b6b;
-}
-
-.review-count {
-  color: #666;
-  font-size: 14px;
-}
-
-.review-list {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.review-item {
-  padding: 20px;
-  border: 1px solid #eee;
-  border-radius: 8px;
-  background-color: #fafafa;
-}
-
-.review-header-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.username {
-  font-weight: 500;
-  color: #333;
-}
-
-.review-time {
-  color: #999;
-  font-size: 12px;
-}
-
-.review-sku {
-  margin-bottom: 10px;
-}
-
-.review-content {
-  color: #666;
-  line-height: 1.6;
-  margin-bottom: 10px;
-}
-
-.review-images {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.review-image {
-  width: 80px;
-  height: 80px;
-  border-radius: 4px;
-  cursor: pointer;
 }
 
 /* 响应式 */

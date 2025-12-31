@@ -26,15 +26,17 @@ public class FileUploadController {
         String newFileName = System.currentTimeMillis() + suffix;
 
         try {
-            // 保存文件到uploads目录
-            String uploadDir = "D:\\test\\project\\emart\\uploads\\";
-            java.io.File dest = new java.io.File(uploadDir + newFileName);
+            // 获取上传目录（使用相对路径或配置的路径）
+            String uploadDir = System.getProperty("user.dir") + java.io.File.separator + "uploads" + java.io.File.separator;
+            java.io.File dir = new java.io.File(uploadDir);
 
             // 确保目录存在
-            if (!dest.getParentFile().exists()) {
-                dest.getParentFile().mkdirs();
+            if (!dir.exists()) {
+                dir.mkdirs();
             }
 
+            // 创建目标文件
+            java.io.File dest = new java.io.File(dir, newFileName);
             file.transferTo(dest);
 
             // 返回文件访问路径

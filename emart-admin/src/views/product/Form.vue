@@ -10,8 +10,8 @@
           <el-input v-model="form.name" placeholder="请输入商品名称"></el-input>
         </el-form-item>
 
-        <el-form-item label="副标题" prop="subTitle">
-          <el-input v-model="form.subTitle" placeholder="请输入副标题"></el-input>
+        <el-form-item label="副标题" prop="subtitle">
+          <el-input v-model="form.subtitle" placeholder="请输入副标题"></el-input>
         </el-form-item>
 
         <el-form-item label="价格" prop="price">
@@ -93,21 +93,24 @@ const isEdit = computed(() => !!route.params.id)
 const categories = ref([])
 
 const form = reactive({
+  id: null,
   name: '',
-  subTitle: '',
+  subtitle: '',
   price: 0,
   stock: 0,
   categoryId: null,
   brand: '',
   detail: '',
-  image: ''
+  image: '',
+  status: 1 // 默认上架
 })
 
 const rules = {
   name: [{ required: true, message: '请输入商品名称', trigger: 'blur' }],
   price: [{ required: true, message: '请输入价格', trigger: 'blur' }],
   stock: [{ required: true, message: '请输入库存', trigger: 'blur' }],
-  categoryId: [{ required: true, message: '请选择分类', trigger: 'change' }]
+  categoryId: [{ required: true, message: '请选择分类', trigger: 'change' }],
+  status: [{ required: true, message: '请选择状态', trigger: 'change' }]
 }
 
 const beforeUpload = (file) => {
@@ -148,10 +151,13 @@ const handleSubmit = () => {
       loading.value = true
       try {
         if (isEdit.value) {
+          // 编辑模式：使用路由参数中的id
           await updateProduct(route.params.id, form)
           ElMessage.success('更新成功')
         } else {
-          await createProduct(form)
+          // 创建模式：id设置为0让后端处理
+          const createData = { ...form, id: 0 }
+          await createProduct(createData)
           ElMessage.success('创建成功')
         }
         router.push('/product/list')
@@ -178,14 +184,16 @@ onMounted(async () => {
     try {
       const res = await getProductDetail(route.params.id)
       const product = res.data
+      form.id = product.id
       form.name = product.name
-      form.subTitle = product.subTitle || ''
+      form.subtitle = product.subtitle || ''
       form.price = product.price
       form.stock = product.stock
       form.categoryId = product.categoryId
       form.brand = product.brand || ''
       form.detail = product.detail || ''
       form.image = product.image || ''
+      form.status = product.status !== undefined ? product.status : 1
     } catch (error) {
       ElMessage.error('加载商品数据失败')
     }

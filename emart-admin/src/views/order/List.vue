@@ -22,17 +22,9 @@
           </template>
         </el-table-column>
         <el-table-column prop="createTime" label="下单时间" width="180"></el-table-column>
-        <el-table-column label="操作" width="200" fixed="right">
+        <el-table-column label="操作" width="150" fixed="right">
           <template #default="{ row }">
             <el-button size="small" @click="handleViewDetail(row)">查看详情</el-button>
-            <el-button
-              size="small"
-              type="primary"
-              v-if="row.status === 1"
-              @click="handleShip(row)"
-            >
-              发货
-            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -81,37 +73,18 @@
         </el-table-column>
       </el-table>
     </el-dialog>
-
-    <!-- 发货对话框 -->
-    <el-dialog v-model="shipDialogVisible" title="订单发货" width="500px">
-      <el-form :model="shipForm" label-width="100px">
-        <el-form-item label="快递单号">
-          <el-input v-model="shipForm.trackingNo" placeholder="请输入快递单号"></el-input>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="shipDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="confirmShip">确定</el-button>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { getAllOrders, shipOrder, getOrderDetail } from '@/api/order'
+import { getAllOrders, getOrderDetail } from '@/api/order'
 
 const loading = ref(false)
 const tableData = ref([])
-const shipDialogVisible = ref(false)
 const detailDialogVisible = ref(false)
-const currentOrder = ref(null)
 const currentOrderDetail = ref(null)
-
-const shipForm = reactive({
-  trackingNo: ''
-})
 
 const pagination = reactive({
   pageNum: 1,
@@ -166,28 +139,6 @@ const handleViewDetail = async (row) => {
     detailDialogVisible.value = true
   } catch (error) {
     ElMessage.error('获取订单详情失败')
-  }
-}
-
-const handleShip = (row) => {
-  currentOrder.value = row
-  shipForm.trackingNo = ''
-  shipDialogVisible.value = true
-}
-
-const confirmShip = async () => {
-  if (!shipForm.trackingNo) {
-    ElMessage.warning('请输入快递单号')
-    return
-  }
-
-  try {
-    await shipOrder(currentOrder.value.id, shipForm.trackingNo)
-    ElMessage.success('发货成功')
-    shipDialogVisible.value = false
-    fetchList()
-  } catch (error) {
-    ElMessage.error('发货失败')
   }
 }
 
