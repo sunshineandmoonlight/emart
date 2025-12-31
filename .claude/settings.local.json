@@ -33,7 +33,8 @@
       "Bash(emart_complete_backup.sql)",
       "Bash(grep:*)",
       "Bash(emart_clean_backup.sql)",
-      "Bash(del nul 2)"
+      "Bash(del nul 2)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []
