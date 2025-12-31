@@ -13,7 +13,7 @@ export function getImageUrl(imagePath) {
     return imagePath
   }
 
-  // 拼接后端URL
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'
+  // 拼接后端URL（使用相对路径）
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || ''
   return `${baseUrl}${imagePath.startsWith('/') ? '' : '/'}${imagePath}`
 }

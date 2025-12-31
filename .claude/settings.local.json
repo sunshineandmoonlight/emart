@@ -21,7 +21,19 @@
       "Bash(if not exist \"docker\\mysql\\init\" mkdir \"docker\\mysql\\init\")",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git config:*)"
+      "Bash(git config:*)",
+      "Bash(dir /s /b srcmainjavacomemart 2)",
+      "Bash(dir /b srcmainjavacomemart 2)",
+      "Bash(dir /s /b srcmainjavacomemartcommon*FileUpload* 2)",
+      "Bash(dir:*)",
+      "Bash(docker exec:*)",
+      "Bash(emart_backup_with_data.sql)",
+      "Bash(docker ps:*)",
+      "Bash(mysqldump:*)",
+      "Bash(emart_complete_backup.sql)",
+      "Bash(grep:*)",
+      "Bash(emart_clean_backup.sql)",
+      "Bash(del nul 2)"
     ],
     "deny": [],
     "ask": []

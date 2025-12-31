@@ -1,5 +1,6 @@
-package com.emart.common.api;
+package com.emart.common.controller;
 
+import com.emart.common.api.CommonResult;
 import org.springframework.web.bind.annotation.*;
 
 /**

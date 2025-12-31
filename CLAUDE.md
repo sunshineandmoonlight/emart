@@ -4,44 +4,56 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Emart is a Spring Boot-based e-commerce platform API built with Java 17. It follows a modular architecture with distinct business domains organized under the `modules` package.
+Emart is a comprehensive Spring Boot-based e-commerce platform API built with Java 17. It follows a modular architecture with distinct business domains organized under the `modules` package, supporting user management, product catalog, shopping cart, order processing, payment integration, and more.
 
 **Tech Stack:**
 - Spring Boot 2.7.18 with Spring Security and Spring Data Redis
 - MyBatis-Plus 3.5.3.1 for database operations
-- MySQL with Druid connection pool
-- JWT (jjwt 0.9.1) for authentication
+- MySQL 8.0 with Druid connection pool
+- JWT (jjwt 0.9.1) for stateless authentication
 - SpringDoc OpenAPI 1.7.0 for API documentation
 - Hutool 5.8.11 utility library
+- Alipay SDK 4.38.157.ALL for payment integration
+- Thymeleaf for email templates
 
 ## Build & Run Commands
 
-### Build the project
+### Local Development
 ```bash
+# Build the project
 ./mvnw clean package
-```
 
-### Run the application
-```bash
+# Run the application (requires MySQL and Redis running locally)
 ./mvnw spring-boot:run
-```
 
-Or run the JAR directly:
-```bash
+# Or run the JAR directly
 java -jar target/emart-api-1.0.0.jar
 ```
 
-### Run tests
+### Docker Deployment
+```bash
+# Start all services (MySQL, Redis, Application)
+docker-compose up -d --build
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+
+# Restart services
+docker-compose restart
+```
+
+### Testing
 ```bash
 # Run all tests
 ./mvnw test
 
 # Run a specific test class
 ./mvnw test -Dtest=EmartApplicationTests
-```
 
-### Package without tests
-```bash
+# Package without tests
 ./mvnw clean package -DskipTests
 ```
 
@@ -55,109 +67,230 @@ The codebase follows a modular architecture organized by business domain:
 com.emart
 ├── common/              # Shared components
 │   ├── api/            # CommonResult (unified API response wrapper), ResultCode
-│   ├── config/         # Common configurations
-│   ├── domain/         # Shared domain objects
-│   ├── exception/      # Custom exception classes
-│   └── service/        # Common service interfaces
-├── config/             # Spring configurations (Security, SpringDoc)
-├── controller/         # Test controllers
+│   ├── service/        # MailService for email notifications
+│   └── controller/     # FileUploadController
+├── config/             # Spring configurations
+│   ├── SecurityConfig  # Spring Security configuration
+│   ├── SpringDocConfig # Swagger/OpenAPI documentation
+│   ├── AlipayConfig    # Payment integration configuration
+│   ├── CorsConfig      # CORS configuration
+│   └── WebConfig       # Web MVC configuration
 ├── modules/            # Business modules (organized by domain)
-│   ├── ums/            # User Management System (用户管理)
-│   ├── pms/            # Product Management System (商品管理)
-│   ├── oms/            # Order Management System (订单管理)
-│   └── cms/            # Content Management System (内容管理)
+│   ├── ums/            # User Management System (用户、收藏、登录注册)
+│   ├── pms/            # Product Management System (商品、分类、SKU、评论)
+│   ├── oms/            # Order Management System (订单、购物车)
+│   ├── cms/            # Content Management System (浏览记录)
+│   ├── sms/            # Sales & Marketing System (优惠券)
+│   ├── payment/        # Payment module (Alipay integration)
+│   └── admin/          # Admin module (统计、管理功能)
 ├── security/           # Security & authentication
-│   ├── component/      # JWT filters, security components
-│   ├── config/         # Security configuration
-│   └── util/           # JwtTokenUtil
+│   └── util/           # JwtTokenUtil for token generation/validation
 └── EmartApplication    # Main application entry point
 ```
 
 ### Module Structure Pattern
 
-Each module (ums/pms/oms/cms) follows this structure:
-- **controller/** - REST API endpoints
-- **dto/** - Data Transfer Objects for request/response
-- **model/** - Database entities
+Each business module follows this consistent structure:
+- **controller/** - REST API endpoints with Swagger annotations
+- **dto/** - Data Transfer Objects for request/response (e.g., *Param, *DTO)
+- **model/** - Database entities (JPA/MyBatis-Plus models)
 - **mapper/** - MyBatis-Plus mappers for database operations
 - **service/** - Service interfaces
-- **service/impl/** - Service implementations
+- **service/impl/** - Service implementations extending ServiceImpl<Mapper, Model>
 
 ### Key Architectural Patterns
 
-1. **Unified API Response**: All controllers return `CommonResult<T>` which wraps responses with standard format (code, message, data)
+1. **Unified API Response**: All controllers return `CommonResult<T>` wrapping responses in `{code, message, data}` format
 
-2. **JWT Authentication**: Stateless authentication using JWT tokens stored in Authorization header (`Bearer <token>`). JwtTokenUtility handles token generation/validation. Token expires after 7 days (configurable via `jwt.expiration`).
+2. **JWT Authentication**: Stateless authentication using JWT tokens in Authorization header (`Bearer <token>`)
+   - Generated by `JwtTokenUtil` with HS512 signing
+   - Token payload includes: userId, username (sub), created timestamp
+   - Expiration: 7 days (configurable via `jwt.expiration`)
+   - Current state: SecurityConfig permits all requests (authentication enforcement planned)
 
-3. **Service Layer Pattern**: Services extend `ServiceImpl<Mapper, Model>` from MyBatis-Plus for basic CRUD operations. Business logic is implemented in service implementations.
+3. **Service Layer Pattern**: Services extend `ServiceImpl<Mapper, Model>` from MyBatis-Plus
+   - Automatic CRUD operations: `save()`, `updateById()`, `removeById()`, `list()`, `page()`
+   - Custom business logic in service implementations
+   - LambdaQueryWrapper for type-safe query construction
 
-4. **Password Encoding**: Uses BCryptPasswordEncoder for secure password hashing.
+4. **Password Encoding**: BCryptPasswordEncoder for secure password hashing (in UserServiceImpl)
 
-5. **DTO Pattern**: Controllers accept DTOs for requests (e.g., UserLoginParam, UserRegisterParam) which are validated using `@Valid`.
+5. **DTO Pattern**: Controllers use DTOs for requests (e.g., `UserLoginParam`, `ProductSaveParam`) validated with `@Valid`
 
-6. **MyBatis-Plus Integration**:
+6. **Redis Caching**: Used for frequently accessed data
+   - Cart items: `oms:cart:{userId}` (see CartServiceImpl:67-76)
+   - Browse history: `cms:browse:{userId}`
+   - Cache invalidation after updates
+
+7. **MyBatis-Plus Integration**:
    - ID auto-generation: `id-type: auto`
-   - Camel case conversion enabled: `map-underscore-to-camel-case: true`
-   - Mapper locations: `classpath:/mapper/**/*.xml`
+   - Camel case conversion: `map-underscore-to-camel-case: true`
+   - Custom XML mappers in `src/main/resources/mapper/`
+   - SQL logging enabled via `StdOutImpl`
+
+8. **Email Notifications**: Thymeleaf templates in `src/main/resources/templates/`
+   - Registration confirmation: `register-success.html`
+   - Order confirmation: `order-confirm.html`
+   - Order shipped notification: `order-shipped.html`
 
 ## Configuration
 
-### Profiles
-- Default active profile: `dev`
-- Configuration files: `application.yml` and `application-dev.yml`
+### Environment Setup
+1. **Local Development**: Use `application-dev.yml` for local database and Redis configuration
+2. **Docker Deployment**: Use `.env` file (copy from `.env.example`) to configure:
+   - Database passwords (must change defaults)
+   - JWT secret
+   - Mail credentials (optional)
+   - Port mappings
+3. **Profiles**: Default active profile is `dev` (configurable via `SPRING_PROFILES_ACTIVE`)
 
-### Database
-- MySQL database: `emart`
-- Default connection: `jdbc:mysql://localhost:3306/emart`
-- Druid connection pool with min 5, max 20 connections
+### Database Configuration
+- **MySQL 8.0**: `jdbc:mysql://localhost:3306/emart`
+- **Connection Pool**: Druid with min 5, max 20 connections
+- **Docker setup**: Database initialization scripts in `docker/mysql/init/` (currently empty, add SQL schema files if needed)
+- **Timezone**: Asia/Shanghai for consistent timestamp handling
 
-### Redis
-- Used for caching (cart, browse history)
-- Default: `localhost:6379`, database 0
+### Redis Configuration
+- **Default**: `localhost:6379`, database 0
+- **Usage**: Shopping cart cache, browse history cache
+- **Key prefixes**: Configured in `application.yml` under `redis.key`
 
 ### Security Configuration
-Current security setup in `SecurityConfig`:
-- CSRF disabled
-- Permits access to `/test/**`, Swagger UI, API docs
-- Currently permits all requests (`.anyRequest().permitAll()`) - planned to enforce authentication
+Located in `SecurityConfig.java`:
+- CSRF disabled for API usage
+- Public endpoints (no authentication required):
+  - `/test/**` - Test endpoints
+  - `/swagger-ui/**`, `/v3/api-docs/**` - API documentation
+  - `/user/register`, `/user/login` - Auth endpoints
+  - `/product/**`, `/category/**` - Product browsing
+  - `/payment/**` - Payment callbacks
+- All other endpoints: Currently permitted (`.anyRequest().permitAll()`), authentication enforcement planned
+
+### Payment Integration (Alipay)
+- **SDK**: Alipay SDK 4.38.157.ALL
+- **Configuration**: `AlipayProperties` and `AlipayConfig`
+- **Environment**: Sandbox mode (`https://openapi.alipaydev.com/gateway.do`)
+- **Keys**: Private key and Alipay public key stored in `application-dev.yml`
+- **Cleanup**: `AlipayConfig.cleanKey()` removes BEGIN/END markers and newlines from keys
 
 ### API Documentation
-- Swagger UI available at `/swagger-ui/**`
-- OpenAPI docs at `/v3/api-docs/**`
-- Accessible without authentication
+- **Swagger UI**: `http://localhost:8080/swagger-ui.html`
+- **OpenAPI JSON**: `http://localhost:8080/v3/api-docs`
+- **Annotations**: Controllers use `@Tag` and `@Operation` for documentation
+- **Access**: Publicly accessible (no authentication required)
 
-## Development Notes
+### File Upload Configuration
+- **Upload path**: `D:/emart/uploads/` (configurable via `file.upload-path`)
+- **Max file size**: 10MB
+- **Endpoint**: `/file/upload` (FileUploadController)
+- **Required directories**: Create manually if not exists: `D:/emart/uploads/`, `D:/emart/images/`
 
-### User Module (Current Implementation)
-- Registration: Creates user with BCrypt-encoded password, status=1
-- Login: Validates credentials, returns JWT token
-- Token includes: userId, username (sub), creation time
-- Password is always cleared before returning user data
-
-### TODOs & Future Work
-- JWT authentication filter implementation (currently UserController.getUserInfo has TODO for JWT parsing)
-- Enforce authentication for protected endpoints (currently `.anyRequest().permitAll()`)
-- Implement remaining modules (pms, oms, cms)
+## Development Guidelines
 
 ### Database Entity Conventions
-- Base fields typically include: id, createTime, status
-- Password field is set to null when returning user data to frontend
-- Timestamps stored as `Date` type
+- **Common fields**: `id` (auto-increment BIGINT), `createTime` (Date), `status` (Integer, 1=active)
+- **Password handling**: Always set to `null` before returning user data to frontend (security)
+- **Timestamps**: Stored as `Date` type, timezone is Asia/Shanghai
+- **Soft deletes**: Use `status` field instead of physical deletion where appropriate
 
 ### API Response Standards
-Use `CommonResult` methods:
+All controllers return `CommonResult<T>` using these factory methods:
 - `CommonResult.success(data)` - Success with data
 - `CommonResult.success(data, message)` - Success with custom message
-- `CommonResult.failed(message)` - Failure with message
-- `CommonResult.validateFailed(message)` - Validation errors
-- `CommonResult.unauthorized(data)` - Not logged in (401)
+- `CommonResult.failed(message)` - General failure
+- `CommonResult.validateFailed(message)` - Validation errors (400)
+- `CommonResult.unauthorized(data)` - Not authenticated (401)
 - `CommonResult.forbidden(data)` - No permission (403)
 
-### File Upload
-- Configured upload path: `D:/emart/uploads/`
-- Max file size: 10MB
+### Query Patterns
+Use **LambdaQueryWrapper** for type-safe, readable database queries:
+```java
+LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<>();
+wrapper.eq(Product::getCategoryId, categoryId)
+       .like(Product::getName, keyword)
+       .orderByDesc(Product::getCreateTime);
+Page<Product> page = this.page(new Page<>(pageNum, pageSize), wrapper);
+```
+Common methods: `eq()`, `ne()`, `like()`, `in()`, `ge()` (>=), `le()` (<=), `orderByDesc()`, `orderByAsc()`
 
-## Port & Access
-- Default port: `8080`
-- Application URL: `http://localhost:8080`
+### Redis Caching Pattern
+```java
+// Cache lookup
+String cacheKey = "prefix:" + userId;
+DataType data = (DataType) redisTemplate.opsForValue().get(cacheKey);
+if (data != null) return data;
+
+// Database query
+DataType data = mapper.selectById(id);
+
+// Cache write (with expiration)
+redisTemplate.opsForValue().set(cacheKey, data, 1, TimeUnit.HOURS);
+
+// Cache invalidation
+redisTemplate.delete(cacheKey);
+```
+
+### Validation Pattern
+- Use `@Valid` annotation on controller method parameters
+- Add JSR-303 validation annotations in DTOs: `@NotNull`, `@NotBlank`, `@Email`, `@Min`, `@Max`
+- Return `CommonResult.validateFailed(message)` on validation errors
+
+### Email Notifications
+Use `MailService.sendTemplateMail()` for transactional emails:
+```java
+Map<String, Object> variables = new HashMap<>();
+variables.put("username", user.getUsername());
+mailService.sendTemplateMail(
+    user.getEmail(),
+    "Email Subject",
+    "template-name",  // Thymeleaf template in resources/templates/
+    variables
+);
+```
+
+### Code Style & Conventions
+- Use Lombok annotations: `@Data`, `@Slf4j`, `@Service`, `@RestController`
+- Controller methods use `@Operation(summary = "...")` for Swagger docs
+- Use `@Resource` for dependency injection in services
+- Log important operations: `log.info("User {} registered successfully", username);`
+- Handle exceptions gracefully, return appropriate `CommonResult` errors
+
+### Common Development Tasks
+
+#### Adding a New API Endpoint
+1. Create DTO in `module/dto/` (if request has complex structure)
+2. Add method in Service interface: `ModuleService`
+3. Implement in `ModuleServiceImpl`: Use MyBatis-Plus methods or custom queries
+4. Add controller method with Swagger annotations:
+   ```java
+   @Operation(summary = "Brief description")
+   @PostMapping("/endpoint")
+   public CommonResult<ReturnType> methodName(@Valid @RequestBody DTO param) {
+       ReturnType result = moduleService.methodName(param);
+       return CommonResult.success(result);
+   }
+   ```
+
+#### Implementing Redis Cache
+1. Inject `RedisTemplate<String, Object>`
+2. Define cache key prefix as constant
+3. Check cache before database query
+4. Populate cache after query
+5. Invalidate cache on updates
+
+#### Working with MyBatis-Plus
+- Basic CRUD: `save()`, `updateById()`, `removeById()`, `getById()`, `list()`
+- Pagination: `page(new Page<>(pageNum, pageSize), wrapper)`
+- Custom queries: Create XML mapper in `src/main/resources/mapper/`
+
+## Port & Access Information
+
+**Local Development:**
+- Application: `http://localhost:8080`
 - Swagger UI: `http://localhost:8080/swagger-ui.html`
+- Health Check: `http://localhost:8080/actuator/health`
+
+**Docker Deployment:**
+- Default port: 8080 (configurable via `APP_PORT` in `.env`)
+- Access via server IP or domain name
+- Configure Nginx reverse proxy for production (see `DEPLOYMENT.md`)
