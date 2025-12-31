@@ -20,7 +20,8 @@
       "Bash(git init:*)",
       "Bash(if not exist \"docker\\mysql\\init\" mkdir \"docker\\mysql\\init\")",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git config:*)"
     ],
     "deny": [],
     "ask": []
