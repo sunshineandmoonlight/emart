@@ -1,6 +1,6 @@
 # Multi-stage build for Spring Boot application
 # Stage 1: Build stage
-FROM maven:3.8.6-openjdk-17-slim AS builder
+FROM maven:3.9.9-eclipse-temurin-17 AS builder
 
 WORKDIR /app
 
@@ -13,7 +13,7 @@ COPY src ./src
 RUN mvn clean package -DskipTests -B
 
 # Stage 2: Runtime stage
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:17-jre
 
 # Install necessary tools
 RUN apt-get update && apt-get install -y \
