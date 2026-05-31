@@ -58,13 +58,25 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Order createOrder(Long userId, String username, OrderParam orderParam) {
-        // 1. 查询用户购物车
-        LambdaQueryWrapper<Cart> cartWrapper = new LambdaQueryWrapper<>();
-        cartWrapper.eq(Cart::getUserId, userId);
-        List<Cart> cartList = cartMapper.selectList(cartWrapper);
+        // 1. 优先使用直接购买商品项；没有传商品项时再查询用户购物车
+        boolean directBuy = orderParam.getItems() != null && !orderParam.getItems().isEmpty();
+        List<Cart> cartList = new ArrayList<>();
+        if (directBuy) {
+            for (OrderParam.OrderItemParam item : orderParam.getItems()) {
+                Cart cart = new Cart();
+                cart.setUserId(userId);
+                cart.setProductId(item.getProductId());
+                cart.setQuantity(item.getQuantity());
+                cartList.add(cart);
+            }
+        } else {
+            LambdaQueryWrapper<Cart> cartWrapper = new LambdaQueryWrapper<>();
+            cartWrapper.eq(Cart::getUserId, userId);
+            cartList = cartMapper.selectList(cartWrapper);
+        }
 
         if (cartList == null || cartList.isEmpty()) {
-            log.warn("购物车为空，无法创建订单，userId: {}", userId);
+            log.warn("订单商品为空，无法创建订单，userId: {}", userId);
             return null;
         }
 
@@ -135,8 +147,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             productMapper.updateById(product);
         }
 
-        // 6. 清空购物车
-        cartMapper.delete(cartWrapper);
+        // 6. 购物车下单成功后清空购物车；直接购买不影响购物车
+        if (!directBuy) {
+            LambdaQueryWrapper<Cart> deleteWrapper = new LambdaQueryWrapper<>();
+            deleteWrapper.eq(Cart::getUserId, userId);
+            cartMapper.delete(deleteWrapper);
+        }
 
         log.info("订单创建成功，orderNo: {}, userId: {}, totalAmount: {}",
             order.getOrderNo(), userId, totalAmount);

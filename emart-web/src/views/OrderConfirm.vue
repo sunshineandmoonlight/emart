@@ -121,6 +121,7 @@ const address = ref(null)
 const showAddressForm = ref(false)
 const submitting = ref(false)
 const addressFormRef = ref()
+const isDirectBuy = ref(false)
 
 const addressForm = reactive({
   receiverName: '',
@@ -211,6 +212,13 @@ const submitOrder = async () => {
       receiverAddress: address.value.receiverAddress
     }
 
+    if (isDirectBuy.value) {
+      orderData.items = cartItems.value.map(item => ({
+        productId: item.productId || item.id,
+        quantity: item.quantity
+      }))
+    }
+
     const res = await createOrder(orderData)
 
     ElMessage.success('订单创建成功！订单确认邮件已发送至您的邮箱')
@@ -233,6 +241,7 @@ onMounted(() => {
     // 如果是从商品详情页立即购买来的
     try {
       const productData = JSON.parse(products)
+      isDirectBuy.value = true
       cartItems.value = [productData]
     } catch (e) {
       console.error('解析商品数据失败', e)
