@@ -100,6 +100,7 @@ public class AdminController {
         wrapper.eq(User::getRole, "SALES");
         wrapper.orderByDesc(User::getCreateTime);
         Page<User> result = userService.page(page, wrapper);
+        result.setTotal(userService.count(wrapper));
         result.getRecords().forEach(user -> user.setPassword(null));
         return CommonResult.success(result);
     }
