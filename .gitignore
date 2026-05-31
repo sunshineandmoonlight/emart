@@ -57,6 +57,8 @@ pnpm-debug.log*
 ### Database Backup ###
 *.sql
 !emart_clean_backup.sql
+!sql/course_design_upgrade_safe.sql
+!docker/mysql/init/*.sql
 
 ### Temporary Files ###
 *.tmp

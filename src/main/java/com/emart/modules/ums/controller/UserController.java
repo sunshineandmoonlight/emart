@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.emart.common.api.CommonResult;
 import com.emart.common.service.MailService;
+import com.emart.modules.log.service.LoginLogService;
 import com.emart.modules.ums.dto.UserLoginParam;
 import com.emart.modules.ums.dto.UserRegisterParam;
 import com.emart.modules.ums.model.User;
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,6 +35,9 @@ public class UserController {
 
     @Autowired
     private MailService mailService;
+
+    @Autowired
+    private LoginLogService loginLogService;
 
     @Value("${jwt.tokenHeader}")
     private String tokenHeader;
@@ -73,15 +78,21 @@ public class UserController {
 
     @Operation(summary = "用户登录")
     @PostMapping("/login")
-    public CommonResult<Map<String, String>> login(@Valid @RequestBody UserLoginParam param) {
+    public CommonResult<Map<String, String>> login(@Valid @RequestBody UserLoginParam param,
+                                                   HttpServletRequest request) {
         String token = userService.login(param);
         if (token == null) {
+            loginLogService.record(null, param.getUsername(), "CUSTOMER", false, "用户名或密码错误", request);
             return CommonResult.validateFailed("用户名或密码错误");
         }
+
+        User user = userService.getUserByUsername(param.getUsername());
+        loginLogService.record(user == null ? null : user.getId(), param.getUsername(), "CUSTOMER", true, "登录成功", request);
 
         Map<String, String> tokenMap = new HashMap<>();
         tokenMap.put("token", token);
         tokenMap.put("tokenHead", tokenHead);
+        tokenMap.put("role", "CUSTOMER");
 
         return CommonResult.success(tokenMap, "登录成功");
     }

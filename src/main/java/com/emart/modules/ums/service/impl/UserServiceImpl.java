@@ -37,6 +37,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         user.setEmail(param.getEmail());
         user.setNickName(param.getNickName());
         user.setStatus(1);
+        user.setRole("CUSTOMER");
         user.setCreateTime(new Date());
 
         // 保存到数据库

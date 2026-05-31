@@ -13,6 +13,17 @@
           </template>
         </el-table-column>
         <el-table-column prop="productName" label="商品名称"></el-table-column>
+        <el-table-column prop="categoryName" label="分类" width="120">
+          <template #default="{ row }">
+            {{ row.categoryName || '-' }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="durationSeconds" label="停留时长" width="110">
+          <template #default="{ row }">
+            {{ row.durationSeconds ? `${row.durationSeconds} 秒` : '-' }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="ip" label="IP地址" width="140"></el-table-column>
         <el-table-column prop="createTime" label="浏览时间" width="180"></el-table-column>
       </el-table>
 

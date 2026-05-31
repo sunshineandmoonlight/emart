@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.emart.common.api.CommonResult;
 import com.emart.common.service.MailService;
 import com.emart.modules.admin.dto.SalesStatsDTO;
+import com.emart.modules.log.service.OperationLogService;
 import com.emart.modules.oms.dto.OrderDetail;
 import com.emart.modules.oms.dto.OrderParam;
 import com.emart.modules.oms.model.Order;
@@ -46,6 +47,9 @@ public class OrderController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private OperationLogService operationLogService;
 
     @Operation(summary = "从购物车创建订单")
     @PostMapping("/create")
@@ -178,9 +182,11 @@ public class OrderController {
     @Operation(summary = "更新订单状态")
     @PostMapping("/status/{orderId}")
     public CommonResult<Boolean> updateOrderStatus(@PathVariable Long orderId,
-                                                  @RequestParam Integer status) {
+                                                  @RequestParam Integer status,
+                                                  HttpServletRequest request) {
         boolean success = orderService.updateOrderStatus(orderId, status);
         if (success) {
+            logOperation("UPDATE_ORDER_STATUS", "更新订单状态，订单ID：" + orderId + "，状态：" + status, request);
             return CommonResult.success(true, "订单状态已更新");
         }
         return CommonResult.failed("更新订单状态失败");
@@ -198,9 +204,11 @@ public class OrderController {
     @Operation(summary = "订单发货（管理员）")
     @PostMapping("/ship/{orderId}")
     public CommonResult<Boolean> shipOrder(@PathVariable Long orderId,
-                                         @RequestParam String trackingNo) {
+                                         @RequestParam String trackingNo,
+                                         HttpServletRequest request) {
         boolean success = orderService.shipOrder(orderId, trackingNo);
         if (success) {
+            logOperation("SHIP_ORDER", "订单发货，订单ID：" + orderId + "，物流单号：" + trackingNo, request);
             return CommonResult.success(true, "发货成功");
         }
         return CommonResult.failed("发货失败");
@@ -260,6 +268,17 @@ public class OrderController {
         } catch (Exception e) {
             log.error("解析Token失败", e);
             return null;
+        }
+    }
+
+    private void logOperation(String type, String content, HttpServletRequest request) {
+        Long userId = getUserIdFromToken(request);
+        if (userId == null) {
+            return;
+        }
+        User operator = userService.getById(userId);
+        if (operator != null) {
+            operationLogService.record(operator.getId(), operator.getUsername(), operator.getRole(), type, content, request);
         }
     }
 }

@@ -18,14 +18,28 @@ public class BrowseLogServiceImpl extends ServiceImpl<BrowseLogMapper, BrowseLog
 
     @Override
     public boolean logBrowse(Long userId, String userName, Long productId, String productName, String ip) {
+        return logBrowse(userId, userName, productId, productName, null, null, ip, null, null);
+    }
+
+    @Override
+    public boolean logBrowse(Long userId, String userName, Long productId, String productName,
+                             Long categoryId, String categoryName, String ip,
+                             Integer durationSeconds, String userAgent) {
         try {
             BrowseLog browseLog = new BrowseLog();
             browseLog.setUserId(userId);
             browseLog.setUserName(userName);
             browseLog.setProductId(productId);
             browseLog.setProductName(productName);
+            browseLog.setCategoryId(categoryId);
+            browseLog.setCategoryName(categoryName);
             browseLog.setIp(ip);
+            browseLog.setDurationSeconds(durationSeconds);
+            browseLog.setUserAgent(userAgent);
             browseLog.setCreateTime(new Date());
+            if (durationSeconds != null) {
+                browseLog.setLeaveTime(new Date());
+            }
 
             return this.save(browseLog);
         } catch (Exception e) {

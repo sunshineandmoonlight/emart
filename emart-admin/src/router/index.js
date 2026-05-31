@@ -22,6 +22,11 @@ const routes = [
         component: () => import('@/views/Dashboard.vue')
       },
       {
+        path: 'analysis/dashboard',
+        name: 'AnalysisDashboard',
+        component: () => import('@/views/analysis/Dashboard.vue')
+      },
+      {
         path: 'product/list',
         name: 'ProductList',
         component: () => import('@/views/product/List.vue')
@@ -30,6 +35,11 @@ const routes = [
         path: 'product/create',
         name: 'ProductCreate',
         component: () => import('@/views/product/Form.vue')
+      },
+      {
+        path: 'category/list',
+        name: 'CategoryList',
+        component: () => import('@/views/category/List.vue')
       },
       {
         path: 'product/edit/:id',
@@ -45,6 +55,11 @@ const routes = [
         path: 'user/list',
         name: 'UserList',
         component: () => import('@/views/user/List.vue')
+      },
+      {
+        path: 'sales/list',
+        name: 'SalesList',
+        component: () => import('@/views/sales/List.vue')
       },
       {
         path: 'browse/list',

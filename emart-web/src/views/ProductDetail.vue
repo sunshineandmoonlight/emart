@@ -128,6 +128,29 @@
       </div>
     </el-card>
 
+    <!-- 协同推荐 -->
+    <el-card class="recommend-card recommend-card-highlight">
+      <template #header>
+        <div class="recommend-header">
+          <h3>浏览过此商品的人也买了</h3>
+          <el-tag type="success">协同过滤推荐</el-tag>
+        </div>
+      </template>
+      <el-row v-if="alsoBuyProducts.length > 0" :gutter="20">
+        <el-col :xs="24" :sm="12" :md="6" v-for="item in alsoBuyProducts" :key="item.id">
+          <div class="recommend-item" @click="goToProduct(item.id)">
+            <img :src="getImageUrl(item.image)" class="recommend-image">
+            <div class="recommend-info">
+              <h4>{{ item.name }}</h4>
+              <span class="recommend-price">¥{{ item.price }}</span>
+            </div>
+          </div>
+        </el-col>
+      </el-row>
+      <el-empty v-else description="暂无共同购买数据，系统会优先展示同分类热门商品">
+        <el-button type="primary" @click="$router.push('/products')">查看更多商品</el-button>
+      </el-empty>
+    </el-card>
 
     <!-- 同类推荐 -->
     <el-card class="recommend-card">
@@ -150,13 +173,15 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { ShoppingCart, CircleCheck, Star } from '@element-plus/icons-vue'
 import { getProductDetail } from '@/api/product'
 import { addToCart as addToCartApi } from '@/api/cart'
 import { getProductList } from '@/api/product'
+import { recordBrowse } from '@/api/browse'
+import { getAlsoBuy } from '@/api/recommend'
 import { getImageUrl } from '@/utils/image'
 
 const route = useRoute()
@@ -168,6 +193,9 @@ const currentImage = ref('')
 const quantity = ref(1)
 const adding = ref(false)
 const recommendProducts = ref([])
+const alsoBuyProducts = ref([])
+const browseStartTime = ref(null)
+const browseReported = ref(false)
 
 // 图片放大镜相关
 const showMagnifier = ref(false)
@@ -231,8 +259,18 @@ const fetchProductDetail = async () => {
     const res = await getProductDetail(id)
     product.value = res.data
     currentImage.value = res.data.image || ''
+    browseStartTime.value = Date.now()
+    browseReported.value = false
 
     // 获取同类推荐商品（同分类的其他商品，排除当前商品）
+    try {
+      const alsoBuyRes = await getAlsoBuy(product.value.id, { limit: 4 })
+      alsoBuyProducts.value = alsoBuyRes.data || []
+    } catch (recError) {
+      console.warn('获取协同推荐失败', recError)
+      alsoBuyProducts.value = []
+    }
+
     try {
       if (product.value.categoryId) {
         const recommendRes = await getProductList({
@@ -254,6 +292,20 @@ const fetchProductDetail = async () => {
     router.push('/products')
   } finally {
     loading.value = false
+  }
+}
+
+const reportBrowseDuration = async () => {
+  if (!product.value || !browseStartTime.value || browseReported.value) return
+  browseReported.value = true
+  const durationSeconds = Math.max(1, Math.round((Date.now() - browseStartTime.value) / 1000))
+  try {
+    await recordBrowse({
+      productId: product.value.id,
+      durationSeconds
+    })
+  } catch (error) {
+    console.warn('记录浏览行为失败', error)
   }
 }
 
@@ -314,6 +366,7 @@ const buyNow = () => {
 }
 
 const goToProduct = (id) => {
+  reportBrowseDuration()
   router.push(`/product/${id}`)
   // 重新加载页面
   setTimeout(() => {
@@ -323,6 +376,12 @@ const goToProduct = (id) => {
 
 onMounted(() => {
   fetchProductDetail()
+  window.addEventListener('beforeunload', reportBrowseDuration)
+})
+
+onBeforeUnmount(() => {
+  reportBrowseDuration()
+  window.removeEventListener('beforeunload', reportBrowseDuration)
 })
 </script>
 
@@ -561,6 +620,20 @@ onMounted(() => {
 /* 推荐商品 */
 .recommend-card {
   margin-bottom: 20px;
+}
+
+.recommend-card-highlight {
+  border: 2px solid #67c23a;
+}
+
+.recommend-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.recommend-header h3 {
+  margin: 0;
 }
 
 .recommend-item {

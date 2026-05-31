@@ -3,9 +3,12 @@ package com.emart.modules.cms.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.emart.common.api.CommonResult;
+import com.emart.modules.cms.dto.BrowseLogParam;
 import com.emart.modules.cms.model.BrowseLog;
 import com.emart.modules.cms.service.BrowseLogService;
+import com.emart.modules.pms.model.Category;
 import com.emart.modules.pms.model.Product;
+import com.emart.modules.pms.service.CategoryService;
 import com.emart.modules.pms.service.ProductService;
 import com.emart.security.util.JwtTokenUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -35,12 +38,26 @@ public class BrowseLogController {
     private ProductService productService;
 
     @Autowired
+    private CategoryService categoryService;
+
+    @Autowired
     private JwtTokenUtil jwtTokenUtil;
 
     @Operation(summary = "记录商品浏览", hidden = true)
     @PostMapping("/log/{productId}")
     public CommonResult<Boolean> logBrowse(@PathVariable Long productId,
                                           HttpServletRequest request) {
+        return recordBrowse(productId, null, request);
+    }
+
+    @Operation(summary = "记录商品浏览行为")
+    @PostMapping("/record")
+    public CommonResult<Boolean> recordBrowse(@RequestBody BrowseLogParam param,
+                                              HttpServletRequest request) {
+        return recordBrowse(param.getProductId(), param.getDurationSeconds(), request);
+    }
+
+    private CommonResult<Boolean> recordBrowse(Long productId, Integer durationSeconds, HttpServletRequest request) {
         // 获取用户信息
         Long userId = null;
         String userName = null;
@@ -61,12 +78,23 @@ public class BrowseLogController {
         if (product == null) {
             return CommonResult.failed("商品不存在");
         }
+        Category category = product.getCategoryId() == null ? null : categoryService.getById(product.getCategoryId());
 
         // 获取IP
         String ip = getClientIp(request);
 
         // 记录浏览日志
-        boolean success = browseLogService.logBrowse(userId, userName, productId, product.getName(), ip);
+        boolean success = browseLogService.logBrowse(
+                userId,
+                userName,
+                productId,
+                product.getName(),
+                product.getCategoryId(),
+                category == null ? null : category.getName(),
+                ip,
+                durationSeconds,
+                request.getHeader("User-Agent")
+        );
         return CommonResult.success(success);
     }
 

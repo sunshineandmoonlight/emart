@@ -76,6 +76,8 @@ const handleLogin = () => {
       request.post('/admin/login', loginForm)
         .then(res => {
           localStorage.setItem('admin_token', res.data.token)
+          localStorage.setItem('admin_username', res.data.username)
+          localStorage.setItem('admin_role', res.data.role)
           ElMessage.success('登录成功')
           router.push('/dashboard')
         })

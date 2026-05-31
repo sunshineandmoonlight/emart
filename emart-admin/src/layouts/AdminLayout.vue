@@ -17,9 +17,17 @@
           <el-icon><Odometer /></el-icon>
           <span>首页统计</span>
         </el-menu-item>
+        <el-menu-item index="/analysis/dashboard">
+          <el-icon><TrendCharts /></el-icon>
+          <span>数据分析</span>
+        </el-menu-item>
         <el-menu-item index="/product/list">
           <el-icon><Goods /></el-icon>
           <span>商品管理</span>
+        </el-menu-item>
+        <el-menu-item index="/category/list">
+          <el-icon><Menu /></el-icon>
+          <span>分类管理</span>
         </el-menu-item>
         <el-menu-item index="/order/list">
           <el-icon><Document /></el-icon>
@@ -28,6 +36,10 @@
         <el-menu-item index="/user/list">
           <el-icon><User /></el-icon>
           <span>客户管理</span>
+        </el-menu-item>
+        <el-menu-item v-if="isAdmin" index="/sales/list">
+          <el-icon><Avatar /></el-icon>
+          <span>销售人员</span>
         </el-menu-item>
         <el-menu-item index="/browse/list">
           <el-icon><DataLine /></el-icon>
@@ -42,7 +54,8 @@
         <div class="header-content">
           <span class="title">{{ pageTitle }}</span>
           <div class="user-info">
-            <span>管理员</span>
+            <el-button type="primary" plain @click="goHome">返回主页</el-button>
+            <span>{{ username }}（{{ roleLabel }}）</span>
             <el-button type="danger" text @click="logout">退出</el-button>
           </div>
         </div>
@@ -60,20 +73,37 @@ import { computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessageBox } from 'element-plus'
 import {
-  Odometer, Goods, Document, User, DataLine
+  Odometer, Goods, Document, User, DataLine, Avatar, Menu, TrendCharts
 } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const route = useRoute()
 
 const activeMenu = computed(() => route.path)
+const role = computed(() => localStorage.getItem('admin_role') || 'ADMIN')
+const username = computed(() => localStorage.getItem('admin_username') || 'admin')
+const isAdmin = computed(() => role.value === 'ADMIN')
+const roleLabel = computed(() => role.value === 'SALES' ? '销售人员' : '管理者')
+
+const goHome = () => {
+  const currentHost = window.location.hostname
+  const protocol = window.location.protocol
+  if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
+    window.open(`${protocol}//localhost:5173/`, '_blank')
+  } else {
+    window.open(`${protocol}//${currentHost}/`, '_blank')
+  }
+}
 
 const pageTitle = computed(() => {
   const titleMap = {
     '/dashboard': '首页统计',
+    '/analysis/dashboard': '数据分析',
     '/product/list': '商品管理',
+    '/category/list': '分类管理',
     '/order/list': '订单管理',
     '/user/list': '客户管理',
+    '/sales/list': '销售人员管理',
     '/browse/list': '浏览日志'
   }
   return titleMap[route.path] || '管理后台'
@@ -84,6 +114,8 @@ const logout = () => {
     type: 'warning'
   }).then(() => {
     localStorage.removeItem('admin_token')
+    localStorage.removeItem('admin_username')
+    localStorage.removeItem('admin_role')
     router.push('/login')
   }).catch(() => {})
 }

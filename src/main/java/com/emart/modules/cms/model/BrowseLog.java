@@ -42,9 +42,34 @@ public class BrowseLog implements Serializable {
     private String productName;
 
     /**
+     * 商品分类ID
+     */
+    private Long categoryId;
+
+    /**
+     * 商品分类名称
+     */
+    private String categoryName;
+
+    /**
      * 访问IP
      */
     private String ip;
+
+    /**
+     * 停留时长（秒）
+     */
+    private Integer durationSeconds;
+
+    /**
+     * User-Agent
+     */
+    private String userAgent;
+
+    /**
+     * 离开时间
+     */
+    private Date leaveTime;
 
     /**
      * 创建时间

@@ -21,6 +21,34 @@
       </el-carousel>
     </el-card>
 
+    <!-- 个性化推荐 -->
+    <el-card class="recommend-card-highlight">
+      <template #header>
+        <div class="card-header">
+          <h3>猜你喜欢</h3>
+          <el-tag type="success">个性化推荐</el-tag>
+        </div>
+      </template>
+      <el-row v-if="recommendProducts.length > 0" :gutter="20">
+        <el-col :xs="24" :sm="12" :md="8" :lg="6" v-for="product in recommendProducts" :key="product.id">
+          <div class="product-card" @click="goToProduct(product.id)">
+            <img :src="getImageUrl(product.image)" class="product-image">
+            <div class="product-info">
+              <h4 class="product-name">{{ product.name }}</h4>
+              <p class="product-subtitle">{{ product.subtitle }}</p>
+              <div class="product-footer">
+                <span class="price">¥{{ product.price }}</span>
+                <el-tag size="small">推荐</el-tag>
+              </div>
+            </div>
+          </div>
+        </el-col>
+      </el-row>
+      <el-empty v-else description="暂无个性化推荐，浏览或购买商品后会生成推荐">
+        <el-button type="primary" @click="$router.push('/products')">去浏览商品</el-button>
+      </el-empty>
+    </el-card>
+
     <!-- 分类导航 -->
     <el-card class="category-card">
       <template #header>
@@ -132,12 +160,14 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Goods, Van, Box, Stamp, Medal } from '@element-plus/icons-vue'
 import { getProductList, getCategoryList } from '@/api/product'
+import { getUserRecommend } from '@/api/recommend'
 import { getImageUrl } from '@/utils/image'
 
 const router = useRouter()
 
 const categories = ref([])
 const featuredProducts = ref([]) // 轮播图推荐商品
+const recommendProducts = ref([])
 const hotProducts = ref([])
 const newProducts = ref([])
 
@@ -168,6 +198,15 @@ const fetchProducts = async () => {
   }
 }
 
+const fetchRecommendProducts = async () => {
+  try {
+    const res = await getUserRecommend({ limit: 4 })
+    recommendProducts.value = res.data || []
+  } catch (error) {
+    recommendProducts.value = []
+  }
+}
+
 const goToCategory = (categoryId) => {
   router.push({
     path: '/products',
@@ -182,6 +221,7 @@ const goToProduct = (productId) => {
 onMounted(() => {
   fetchCategories()
   fetchProducts()
+  fetchRecommendProducts()
 })
 </script>
 
@@ -315,9 +355,14 @@ onMounted(() => {
 }
 
 /* 商品卡片 */
+.recommend-card-highlight,
 .hot-products-card,
 .new-products-card {
   margin-bottom: 20px;
+}
+
+.recommend-card-highlight {
+  border: 2px solid #67c23a;
 }
 
 .product-card {

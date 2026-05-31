@@ -32,6 +32,10 @@
           </a>
         </el-form-item>
       </el-form>
+
+      <div class="admin-tip">
+        管理员账号：admin　密码：admin123；销售账号：sales01　密码：123456
+      </div>
     </el-card>
   </div>
 </template>
@@ -49,13 +53,12 @@ const loading = ref(false)
 // 动态生成管理员入口URL
 const adminUrl = computed(() => {
   const currentHost = window.location.hostname
-  const adminPort = '5175'
+  const protocol = window.location.protocol
 
   if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
-    return `http://localhost:${adminPort}/login`
-  } else {
-    return `http://${currentHost}:${adminPort}/login`
+    return `${protocol}//localhost:5175/login`
   }
+  return `${protocol}//${currentHost}:8081/login`
 })
 
 const loginForm = reactive({
@@ -108,6 +111,16 @@ const handleLogin = async () => {
 
 h2 {
   margin: 0;
+  text-align: center;
+}
+
+.admin-tip {
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid #ebeef5;
+  color: #909399;
+  font-size: 12px;
+  line-height: 1.6;
   text-align: center;
 }
 </style>

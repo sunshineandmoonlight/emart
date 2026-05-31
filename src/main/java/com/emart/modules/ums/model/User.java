@@ -65,4 +65,9 @@ public class User implements Serializable {
      * 帐号启用状态：0->禁用；1->启用
      */
     private Integer status;
+
+    /**
+     * 角色：CUSTOMER/SALES/ADMIN
+     */
+    private String role;
 }
