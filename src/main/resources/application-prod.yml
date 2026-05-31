@@ -4,8 +4,6 @@ server:
 spring:
   application:
     name: emart-api
-  profiles:
-    active: prod
   servlet:
     multipart:
       max-file-size: 10MB
